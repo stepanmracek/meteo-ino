@@ -14,12 +14,16 @@ int prevButtonState = LOW;
 const char* ssid = "SSID";
 const char* password = "PASSWORD";
 const char* mqtt_server = "MQTT_SERVER";
+const char* deviceName = "d1-shield";
+const char* infoStr = "temperature:humidity";
 
 float temp;
-float hum;
-
 char tempStr[10];
+char tempTopic[50];
+float hum;
 char humStr[10];
+char humTopic[50];
+char infoTopic[50];
 
 enum DisplayMode {
   DM_None, DM_Temp, DM_Humidity, DM_Connection, DM_size
@@ -32,9 +36,12 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 
 void setup() {
-  //pinMode(buttonPin, INPUT);
-  
   Serial.begin(9600);
+
+  snprintf(infoTopic, 49, "device/%s/info", deviceName);
+  Serial.println(infoTopic);
+  Serial.println(infoStr);
+
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialize with the I2C addr 0x3C (for the 64x48)
   display.clearDisplay();
   display.setTextSize(1);
@@ -81,6 +88,7 @@ void reconnect() {
     // Attempt to connect
     if (client.connect("ESP8266Client")) {
       Serial.println("connected");
+      client.publish(infoTopic, infoStr, true);
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -119,11 +127,13 @@ void loop() {
   }
 
   if (lastMeasure == current) {
+    snprintf(tempTopic, 49, "device/%s/temperature", deviceName);
     snprintf(tempStr, 9, "%f", temp);
-    snprintf(humStr, 9, "%f", hum);
+    client.publish(tempTopic, tempStr);
 
-    client.publish("temperature", tempStr);
-    client.publish("humidity", humStr);
+    snprintf(humTopic, 49, "device/%s/humidity", deviceName);
+    snprintf(humStr, 9, "%f", hum);
+    client.publish(humTopic, humStr);
   }
 
   if (pressed) {
@@ -150,6 +160,8 @@ void loop() {
     } else if (displayMode == DM_Connection) {
       display.println("IP:");
       display.println(WiFi.localIP());
+      display.println("mqtt:");
+      display.println(mqtt_server);
     }
 
     display.display();
