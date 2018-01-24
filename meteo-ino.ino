@@ -1,4 +1,3 @@
-#include <ESP8266HTTPUpdateServer.h>
 #include <ESP8266WiFi.h>
 #include <WEMOS_SHT3X.h>
 #include <Adafruit_SSD1306.h>
