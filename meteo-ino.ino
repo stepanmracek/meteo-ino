@@ -122,7 +122,6 @@ void loop() {
   bool pressed = false;
   buttonState = digitalRead(buttonPin);
   if (prevButtonState != buttonState && buttonState == LOW) {
-    Serial.println(buttonState);
     pressed = true;
   }
   prevButtonState = buttonState;
