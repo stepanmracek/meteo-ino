@@ -132,6 +132,7 @@ void loop() {
   client.loop();
 
   int current = millis();
+  bool error = false;
   if (current - lastMeasure > 5000 || pressed) {
     lastMeasure = current;
     if (sht30.get() == 0) {
@@ -139,6 +140,7 @@ void loop() {
       hum = sht30.humidity;
     } else {
       Serial.println("SHT30 error");
+      error = true;
     }
 
     int status = mhz19.getStatus();
@@ -147,10 +149,11 @@ void loop() {
       temp2 = mhz19.getTemperature() - 3;
     } else {
       Serial.println("MH-Z19 error");
+      error = true;
     }
   }
 
-  if (lastMeasure == current) {
+  if (lastMeasure == current && !error) {
     snprintf(tempTopic, 49, "device/%s/temperature", deviceName);
     snprintf(tempStr, 9, "%f", temp);
     client.publish(tempTopic, tempStr);
