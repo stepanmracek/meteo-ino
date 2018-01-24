@@ -1,4 +1,5 @@
 #include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
 #include <WEMOS_SHT3X.h>
 #include <Adafruit_SSD1306.h>
 #include <PubSubClient.h>
@@ -48,6 +49,7 @@ SHT3X sht30(0x45);
 
 WiFiClient espClient;
 PubSubClient client(espClient);
+ESP8266WebServer server(80);
 
 void setup() {
   Serial.begin(9600);
@@ -90,6 +92,27 @@ void setup() {
 
   mhz19.begin(rx_pin, tx_pin);
   mhz19.setAutoCalibration(true);
+
+  Serial.println("Configuring HTPP server");
+  server.on("/", []() {
+    server.send(200, "text/plain", deviceName);
+  });
+  server.on("/info", []() {
+    server.send(200, "text/plain", infoStr);
+  });
+  server.on("/temperature", []() {
+    server.send(200, "text/plain", tempStr);
+  });
+  server.on("/humidity", []() {
+    server.send(200, "text/plain", humStr);
+  });
+  server.on("/co2", []() {
+    server.send(200, "text/plain", co2Str);
+  });
+  server.on("/temperature2", []() {
+    server.send(200, "text/plain", temp2Str);
+  });
+  server.begin();
 
   Serial.println("leaving setup()");
 }
@@ -151,6 +174,8 @@ void loop() {
       error = true;
     }
   }
+
+  server.handleClient();
 
   if (lastMeasure == current && !error) {
     snprintf(tempTopic, 49, "device/%s/temperature", deviceName);
