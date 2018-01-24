@@ -135,7 +135,7 @@ void loop() {
   if (current - lastMeasure > 5000 || pressed) {
     lastMeasure = current;
     if (sht30.get() == 0) {
-      temp = sht30.cTemp;
+      temp = sht30.cTemp - 3;
       hum = sht30.humidity;
     } else {
       Serial.println("SHT30 error");
@@ -144,7 +144,7 @@ void loop() {
     int status = mhz19.getStatus();
     if (status >= 0) {
       co2 = mhz19.getPPM();
-      temp2 = mhz19.getTemperature();
+      temp2 = mhz19.getTemperature() - 3;
     } else {
       Serial.println("MH-Z19 error");
     }
