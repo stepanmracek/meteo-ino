@@ -15,6 +15,7 @@ int prevButtonState = LOW;
 const char* ssid = "SSID";
 const char* password = "PASSWORD";
 const char* mqtt_server = "MQTT_SERVER";
+bool enableMqtt = false;
 const int rx_pin = D7;
 const int tx_pin = D8;
 MHZ19_uart mhz19;
@@ -88,7 +89,7 @@ void setup() {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-  client.setServer(mqtt_server, 1883);
+  if (enableMqtt) client.setServer(mqtt_server, 1883);
 
   mhz19.begin(rx_pin, tx_pin);
   mhz19.setAutoCalibration(true);
@@ -148,10 +149,10 @@ void loop() {
   }
   prevButtonState = buttonState;
 
-  if (!client.connected()) {
+  if (enableMqtt && !client.connected()) {
     reconnect();
   }
-  client.loop();
+  if (enableMqtt) client.loop();
 
   int current = millis();
   bool error = false;
@@ -180,19 +181,19 @@ void loop() {
   if (lastMeasure == current && !error) {
     snprintf(tempTopic, 49, "device/%s/temperature", deviceName);
     snprintf(tempStr, 9, "%f", temp);
-    client.publish(tempTopic, tempStr);
+    if (enableMqtt) client.publish(tempTopic, tempStr);
 
     snprintf(humTopic, 49, "device/%s/humidity", deviceName);
     snprintf(humStr, 9, "%f", hum);
-    client.publish(humTopic, humStr);
+    if (enableMqtt) client.publish(humTopic, humStr);
 
     snprintf(co2Topic, 49, "device/%s/co2", deviceName);
     snprintf(co2Str, 9, "%d", co2);
-    client.publish(co2Topic, co2Str);
+    if (enableMqtt) client.publish(co2Topic, co2Str);
 
     snprintf(temp2Topic, 49, "device/%s/temperature2", deviceName);
     snprintf(temp2Str, 9, "%d", temp2);
-    client.publish(temp2Topic, temp2Str);
+    if (enableMqtt) client.publish(temp2Topic, temp2Str);
   }
 
   if (pressed) {
@@ -231,8 +232,10 @@ void loop() {
     } else if (displayMode == DM_Connection) {
       display.println("IP:");
       display.println(WiFi.localIP());
-      display.println("mqtt:");
-      display.println(mqtt_server);
+      if (enableMqtt) {
+        display.println("mqtt:");
+        display.println(mqtt_server);
+      }
     }
     display.display();
   }
