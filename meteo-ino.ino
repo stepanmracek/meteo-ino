@@ -96,21 +96,27 @@ void setup() {
 
   Serial.println("Configuring HTPP server");
   server.on("/", []() {
+    server.sendHeader("Access-Control-Allow-Origin", "*");
     server.send(200, "text/plain", deviceName);
   });
   server.on("/info", []() {
+    server.sendHeader("Access-Control-Allow-Origin", "*");
     server.send(200, "text/plain", infoStr);
   });
   server.on("/temperature", []() {
+    server.sendHeader("Access-Control-Allow-Origin", "*");
     server.send(200, "text/plain", tempStr);
   });
   server.on("/humidity", []() {
+    server.sendHeader("Access-Control-Allow-Origin", "*");
     server.send(200, "text/plain", humStr);
   });
   server.on("/co2", []() {
+    server.sendHeader("Access-Control-Allow-Origin", "*");
     server.send(200, "text/plain", co2Str);
   });
   server.on("/temperature2", []() {
+    server.sendHeader("Access-Control-Allow-Origin", "*");
     server.send(200, "text/plain", temp2Str);
   });
   server.begin();
