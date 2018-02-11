@@ -21,7 +21,7 @@ const int tx_pin = D8;
 MHZ19_uart mhz19;
 
 const char* deviceName = "d1-shield";
-const char* infoStr = "temperature:humidity:temperature2:co2";
+const char* infoStr = "temperature humidity temperature2 co2";
 
 float temp;
 char tempStr[10];
