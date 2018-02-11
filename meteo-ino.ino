@@ -48,9 +48,9 @@ DisplayMode displayMode = DM_None;
 
 SHT3X sht30(0x45);
 
-WiFiClient espClient;
-PubSubClient client(espClient);
-ESP8266WebServer server(80);
+WiFiClient wifiClient;
+PubSubClient mqttClient(wifiClient);
+ESP8266WebServer webServer(80);
 
 void setup() {
   Serial.begin(9600);
@@ -89,56 +89,56 @@ void setup() {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-  if (enableMqtt) client.setServer(mqtt_server, 1883);
+  if (enableMqtt) mqttClient.setServer(mqttServerIp, 1883);
 
   mhz19.begin(rx_pin, tx_pin);
   mhz19.setAutoCalibration(true);
 
-  Serial.println("Configuring HTPP server");
-  server.on("/", []() {
-    server.sendHeader("Access-Control-Allow-Origin", "*");
-    server.send(200, "text/plain", deviceName);
+  Serial.println("Configuring HTTP server");
+  webServer.on("/", []() {
+    webServer.sendHeader("Access-Control-Allow-Origin", "*");
+    webServer.send(200, "text/plain", deviceName);
   });
-  server.on("/info", []() {
-    server.sendHeader("Access-Control-Allow-Origin", "*");
-    server.send(200, "text/plain", infoStr);
+  webServer.on("/info", []() {
+    webServer.sendHeader("Access-Control-Allow-Origin", "*");
+    webServer.send(200, "text/plain", infoStr);
   });
-  server.on("/temperature", []() {
-    server.sendHeader("Access-Control-Allow-Origin", "*");
-    server.send(200, "text/plain", tempStr);
+  webServer.on("/temperature", []() {
+    webServer.sendHeader("Access-Control-Allow-Origin", "*");
+    webServer.send(200, "text/plain", tempStr);
   });
-  server.on("/humidity", []() {
-    server.sendHeader("Access-Control-Allow-Origin", "*");
-    server.send(200, "text/plain", humStr);
+  webServer.on("/humidity", []() {
+    webServer.sendHeader("Access-Control-Allow-Origin", "*");
+    webServer.send(200, "text/plain", humStr);
   });
-  server.on("/co2", []() {
-    server.sendHeader("Access-Control-Allow-Origin", "*");
-    server.send(200, "text/plain", co2Str);
+  webServer.on("/co2", []() {
+    webServer.sendHeader("Access-Control-Allow-Origin", "*");
+    webServer.send(200, "text/plain", co2Str);
   });
-  server.on("/temperature2", []() {
-    server.sendHeader("Access-Control-Allow-Origin", "*");
-    server.send(200, "text/plain", temp2Str);
+  webServer.on("/temperature2", []() {
+    webServer.sendHeader("Access-Control-Allow-Origin", "*");
+    webServer.send(200, "text/plain", temp2Str);
   });
-  server.begin();
+  webServer.begin();
 
   Serial.println("leaving setup()");
 }
 
-void reconnect() {
+void mqttReconnect() {
   display.clearDisplay();
   display.setCursor(0, 0);
   display.setTextSize(1);
-  while (!client.connected()) {
+  while (!mqttClient.connected()) {
     display.println("mqtt...");
     display.display();
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
-    if (client.connect("ESP8266Client")) {
+    if (mqttClient.connect("ESP8266Client")) {
       Serial.println("connected");
-      client.publish(infoTopic, infoStr, true);
+      mqttClient.publish(infoTopic, infoStr, true);
     } else {
       Serial.print("failed, rc=");
-      Serial.print(client.state());
+      Serial.print(mqttClient.state());
       Serial.println(" try again in 5 seconds");
       // Wait 5 seconds before retrying
       delay(5000);
@@ -155,10 +155,10 @@ void loop() {
   }
   prevButtonState = buttonState;
 
-  if (enableMqtt && !client.connected()) {
-    reconnect();
+  if (enableMqtt) {
+    if (!mqttClient.connected()) mqttReconnect();
+    mqttClient.loop();
   }
-  if (enableMqtt) client.loop();
 
   int current = millis();
   bool error = false;
@@ -182,24 +182,24 @@ void loop() {
     }
   }
 
-  server.handleClient();
+  webServer.handleClient();
 
   if (lastMeasure == current && !error) {
     snprintf(tempTopic, 49, "device/%s/temperature", deviceName);
     snprintf(tempStr, 9, "%f", temp);
-    if (enableMqtt) client.publish(tempTopic, tempStr);
+    if (enableMqtt) mqttClient.publish(tempTopic, tempStr);
 
     snprintf(humTopic, 49, "device/%s/humidity", deviceName);
     snprintf(humStr, 9, "%f", hum);
-    if (enableMqtt) client.publish(humTopic, humStr);
+    if (enableMqtt) mqttClient.publish(humTopic, humStr);
 
     snprintf(co2Topic, 49, "device/%s/co2", deviceName);
     snprintf(co2Str, 9, "%d", co2);
-    if (enableMqtt) client.publish(co2Topic, co2Str);
+    if (enableMqtt) mqttClient.publish(co2Topic, co2Str);
 
     snprintf(temp2Topic, 49, "device/%s/temperature2", deviceName);
     snprintf(temp2Str, 9, "%d", temp2);
-    if (enableMqtt) client.publish(temp2Topic, temp2Str);
+    if (enableMqtt) mqttClient.publish(temp2Topic, temp2Str);
   }
 
   if (pressed) {
@@ -240,7 +240,7 @@ void loop() {
       display.println(WiFi.localIP());
       if (enableMqtt) {
         display.println("mqtt:");
-        display.println(mqtt_server);
+        display.println(mqttServerIp);
       }
     }
     display.display();
