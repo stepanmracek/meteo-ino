@@ -49,6 +49,7 @@ DisplayMode displayMode = DM_None;
 SHT3X sht30(0x45);
 
 WiFiClient wifiClient;
+WiFiServer telnetServer(4949);
 PubSubClient mqttClient(wifiClient);
 ESP8266WebServer webServer(80);
 
@@ -78,6 +79,8 @@ void setup() {
     display.print(".");
     display.display();
   }
+
+  telnetServer.begin();
   
   display.clearDisplay();
   display.setCursor(0, 0);
@@ -146,6 +149,77 @@ void mqttReconnect() {
   }
 }
 
+void muninConfig(WiFiClient &client, const char* title, const char *label) {
+  /* graph_title {{title}}
+   * graph_vlabel {{label}}
+   * {{label}}.label {{label}} */
+  client.print("graph_title ");
+  client.println(title);
+
+  client.print("graph_vlabel ");
+  client.println(label);
+
+  client.print(label);
+  client.print(".label ");
+  client.println(label);
+}
+
+void muninFetch(WiFiClient &client, const char *label, const char *value) {
+  /* {{label}}.value {{value}} */
+  client.print(label);
+  client.print(".value ");
+  client.println(value);
+}
+
+void handleTelnetClient() {
+  WiFiClient client = telnetServer.available();
+  if (client) {
+    client.setTimeout(10);
+    client.print("# munin node at d1-shield\n");
+    while (client.connected()) {
+      if (client.available()) {
+        String command = client.readString();
+        Serial.print("command: ");
+        Serial.println(command);
+        if (command.startsWith("quit")) break;
+        if (command.startsWith("version")) {
+          client.println("munin node on d1-shield version: 1.0.0");
+          continue;
+        }
+        if (command.startsWith("list")) {
+          client.println(infoStr);
+          continue;
+        }
+        if (command.startsWith("config")) {
+          if (command.startsWith("config temperature2")) muninConfig(client, "Temperature (from CO_2 sensor)", "temperature2");
+          else if (command.startsWith("config temperature")) muninConfig(client, "Temperature", "temperature");
+          else if (command.startsWith("config humidity")) muninConfig(client, "Humidity", "humidity");
+          else if (command.startsWith("config co2")) muninConfig(client, "CO_2", "co2");
+          else {
+            client.print("# Not supported plugin. Try: ");
+            client.println(infoStr);
+          }
+          continue;
+        }
+        if (command.startsWith("fetch")) {
+          if (command.startsWith("fetch temperature2")) muninFetch(client, "temperature2", temp2Str);
+          else if (command.startsWith("fetch temperature")) muninFetch(client, "temperature", tempStr);
+          else if (command.startsWith("fetch humidity")) muninFetch(client, "humidity", humStr);
+          else if (command.startsWith("fetch co2")) muninFetch(client, "co2", co2Str);
+          else {
+            client.print("# Not supported plugin. Try: ");
+            client.println(infoStr);
+          }
+          continue;
+        }
+        client.println("# Unknown command. Try list, config, fetch, version or quit");
+      }
+    }
+    delay(1);
+    client.stop();
+  }
+}
+
 int lastMeasure = 0;
 void loop() {
   bool pressed = false;
@@ -183,6 +257,7 @@ void loop() {
   }
 
   webServer.handleClient();
+  handleTelnetClient();
 
   if (lastMeasure == current && !error) {
     snprintf(tempTopic, 49, "device/%s/temperature", deviceName);
