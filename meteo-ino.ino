@@ -99,7 +99,7 @@ void setup() {
     webServer.sendHeader("Access-Control-Allow-Origin", "*");
     webServer.send(200, "text/plain", deviceName);
   });
-  webServer.on("/info", []() {
+  webServer.on("/list", []() {
     webServer.sendHeader("Access-Control-Allow-Origin", "*");
     webServer.send(200, "text/plain", infoStr);
   });
