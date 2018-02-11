@@ -162,6 +162,7 @@ void muninConfig(WiFiClient &client, const char* title, const char *label) {
   client.print(label);
   client.print(".label ");
   client.println(label);
+  client.println(".");
 }
 
 void muninFetch(WiFiClient &client, const char *label, const char *value) {
@@ -169,13 +170,16 @@ void muninFetch(WiFiClient &client, const char *label, const char *value) {
   client.print(label);
   client.print(".value ");
   client.println(value);
+  client.println(".");
 }
 
 void handleTelnetClient() {
   WiFiClient client = telnetServer.available();
   if (client) {
-    client.setTimeout(10);
-    client.print("# munin node at d1-shield\n");
+    Serial.println("client connected");
+    client.setTimeout(100);
+    client.print("# munin node at ");
+    client.println(deviceName);
     while (client.connected()) {
       if (client.available()) {
         String command = client.readString();
@@ -183,8 +187,14 @@ void handleTelnetClient() {
         Serial.println(command);
         if (command.startsWith("quit")) break;
         if (command.startsWith("version")) {
-          client.println("munin node on d1-shield version: 1.0.0");
+          client.print("munin node on ");
+          client.print(deviceName);
+          client.println(" version: 1.0.0");
           continue;
+        }
+        if (command.startsWith("nodes")) {
+          client.println(deviceName);
+          client.println(".");
         }
         if (command.startsWith("list")) {
           client.println(infoStr);
