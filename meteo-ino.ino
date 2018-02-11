@@ -55,7 +55,7 @@ ESP8266WebServer webServer(80);
 void setup() {
   Serial.begin(9600);
 
-  snprintf(infoTopic, 49, "device/%s/info", deviceName);
+  snprintf(infoTopic, 49, "device/%s/list", deviceName);
   Serial.println(infoTopic);
   Serial.println(infoStr);
 
