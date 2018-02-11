@@ -23,11 +23,11 @@ MHZ19_uart mhz19;
 const char* deviceName = "d1-shield";
 const char* infoStr = "temperature humidity temperature2 co2";
 
-float temp;
+float temp = 20.0f;
 char tempStr[10];
 char tempTopic[50];
 
-float hum;
+float hum = 50.0f;
 char humStr[10];
 char humTopic[50];
 
