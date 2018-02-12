@@ -14,7 +14,7 @@ int prevButtonState = LOW;
 
 const char* ssid = "SSID";
 const char* password = "PASSWORD";
-const char* mqtt_server = "MQTT_SERVER";
+const char* mqttServerIp = "MQTT_SERVER";
 bool enableMqtt = false;
 const int rx_pin = D7;
 const int tx_pin = D8;
