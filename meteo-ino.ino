@@ -271,11 +271,11 @@ void loop() {
 
   if (lastMeasure == current && !error) {
     snprintf(tempTopic, 49, "device/%s/temperature", deviceName);
-    snprintf(tempStr, 9, "%f", temp);
+    snprintf(tempStr, 9, "%.2f", temp);
     if (enableMqtt) mqttClient.publish(tempTopic, tempStr);
 
     snprintf(humTopic, 49, "device/%s/humidity", deviceName);
-    snprintf(humStr, 9, "%f", hum);
+    snprintf(humStr, 9, "%.2f", hum);
     if (enableMqtt) mqttClient.publish(humTopic, humStr);
 
     snprintf(co2Topic, 49, "device/%s/co2", deviceName);
