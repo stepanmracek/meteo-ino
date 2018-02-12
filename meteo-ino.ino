@@ -67,7 +67,7 @@ void setup() {
   display.setCursor(0,0);
   display.println("connecting");
   display.display();
-  
+
   Serial.print("Connecting to ");
   Serial.println(ssid);
 
@@ -81,12 +81,12 @@ void setup() {
   }
 
   telnetServer.begin();
-  
+
   display.clearDisplay();
   display.setCursor(0, 0);
   display.println("connected");
   display.display();
-  
+
   Serial.println("");
   Serial.println("WiFi connected");  
   Serial.print("IP address: ");
