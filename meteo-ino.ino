@@ -154,23 +154,25 @@ void muninConfig(WiFiClient &client, const char* title, const char *label) {
    * graph_vlabel {{label}}
    * {{label}}.label {{label}} */
   client.print("graph_title ");
-  client.println(title);
+  client.print(title);
+  client.print("\n");
 
   client.print("graph_vlabel ");
-  client.println(label);
+  client.print(label);
+  client.print("\n");
 
   client.print(label);
   client.print(".label ");
-  client.println(label);
-  client.println(".");
+  client.print(label);
+  client.print("\n.\n");
 }
 
 void muninFetch(WiFiClient &client, const char *label, const char *value) {
   /* {{label}}.value {{value}} */
   client.print(label);
   client.print(".value ");
-  client.println(value);
-  client.println(".");
+  client.print(value);
+  client.print("\n.\n");
 }
 
 void handleTelnetClient() {
@@ -179,7 +181,8 @@ void handleTelnetClient() {
     Serial.println("client connected");
     client.setTimeout(100);
     client.print("# munin node at ");
-    client.println(deviceName);
+    client.print(deviceName);
+    client.print("\n");
     while (client.connected()) {
       if (client.available()) {
         String command = client.readString();
@@ -189,15 +192,16 @@ void handleTelnetClient() {
         if (command.startsWith("version")) {
           client.print("munin node on ");
           client.print(deviceName);
-          client.println(" version: 1.0.0");
+          client.print(" version: 1.0.0\n");
           continue;
         }
         if (command.startsWith("nodes")) {
-          client.println(deviceName);
-          client.println(".");
+          client.print(deviceName);
+          client.print("\n.\n");
         }
         if (command.startsWith("list")) {
-          client.println(infoStr);
+          client.print(infoStr);
+          client.print("\n");
           continue;
         }
         if (command.startsWith("config")) {
@@ -207,7 +211,8 @@ void handleTelnetClient() {
           else if (command.startsWith("config co2")) muninConfig(client, "CO_2", "co2");
           else {
             client.print("# Not supported plugin. Try: ");
-            client.println(infoStr);
+            client.print(infoStr);
+            client.print("\n");
           }
           continue;
         }
@@ -218,13 +223,16 @@ void handleTelnetClient() {
           else if (command.startsWith("fetch co2")) muninFetch(client, "co2", co2Str);
           else {
             client.print("# Not supported plugin. Try: ");
-            client.println(infoStr);
+            client.print(infoStr);
+            client.print("\n");
           }
           continue;
         }
-        client.println("# Unknown command. Try list, config, fetch, version or quit");
+        client.print("# Unknown command. Try list, config, fetch, version or quit");
+        client.print("\n");
       }
     }
+    Serial.println("client disconnected");
     delay(1);
     client.stop();
   }
